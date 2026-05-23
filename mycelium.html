@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mycelium — The company brain.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,200..900,0..100,0..1;1,9..144,200..900,0..100,0..1&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:           #F2EBDD;
+    --bg-deep:      #E8DEC8;
+    --paper:        #FBF6EA;
+    --ink:          #0E2A20;
+    --ink-soft:     #1F3A2E;
+    --moss:         #5A7858;
+    --moss-pale:    #A6B8A0;
+    --copper:       #B8753E;
+    --copper-bright:#D4934F;
+    --copper-deep:  #8E5829;
+    --rule:         #C9BEA8;
+    --rule-soft:    #DCD1B8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Instrument Sans', system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+  }
+
+  /* Subtle paper grain on the body */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(14,42,32,0.04) 1px, transparent 0);
+    background-size: 3px 3px;
+    mix-blend-mode: multiply;
+    opacity: 0.6;
+  }
+
+  .display {
+    font-family: 'Fraunces', serif;
+    font-optical-sizing: auto;
+    font-variation-settings: "SOFT" 30, "WONK" 0;
+    letter-spacing: -0.025em;
+    line-height: 0.98;
+    font-weight: 400;
+  }
+
+  .serif-italic {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-variation-settings: "SOFT" 50, "WONK" 1;
+  }
+
+  .mono-eyebrow {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--moss);
+  }
+
+  /* ============ NAV ============ */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 24px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+    background: rgba(242, 235, 221, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s ease;
+  }
+  nav.scrolled { border-bottom-color: var(--rule-soft); }
+
+  .logo {
+    font-family: 'Fraunces', serif;
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-mark {
+    width: 22px; height: 22px;
+    display: inline-block;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .nav-links a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .nav-links a:hover { color: var(--copper); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 22px;
+    border-radius: 999px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn-primary:hover {
+    background: var(--copper-deep);
+    transform: translateY(-1px);
+  }
+  .btn-ghost {
+    color: var(--ink);
+    border-color: var(--ink);
+  }
+  .btn-ghost:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  .btn-text {
+    color: var(--ink);
+    padding: 11px 0;
+    gap: 6px;
+  }
+  .btn-text:hover { color: var(--copper); gap: 12px; }
+
+  /* ============ LAYOUT ============ */
+  section { position: relative; z-index: 2; }
+  .container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+
+  /* ============ HERO ============ */
+  .hero {
+    min-height: 100vh;
+    padding: 140px 0 80px;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--copper);
+  }
+
+  .hero-headline {
+    font-size: clamp(56px, 7vw, 104px);
+    margin-bottom: 28px;
+  }
+  .hero-headline em {
+    font-style: italic;
+    color: var(--copper);
+    font-variation-settings: "SOFT" 80, "WONK" 1;
+  }
+
+  .hero-sub {
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 520px;
+    margin-bottom: 40px;
+  }
+
+  .hero-ctas {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  /* ============ NETWORK VISUALIZATION ============ */
+  .network-frame {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    background: var(--paper);
+    border-radius: 4px;
+    border: 1px solid var(--rule-soft);
+    box-shadow:
+      0 1px 2px rgba(14,42,32,0.04),
+      0 20px 50px -20px rgba(14,42,32,0.15);
+    overflow: hidden;
+  }
+
+  .network-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(184,117,62,0.06), transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(90,120,88,0.08), transparent 50%);
+    z-index: 0;
+  }
+
+  .frame-corner {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 1px solid var(--ink);
+    z-index: 4;
+  }
+  .frame-corner.tl { top: 12px; left: 12px; border-right: none; border-bottom: none; }
+  .frame-corner.tr { top: 12px; right: 12px; border-left: none; border-bottom: none; }
+  .frame-corner.bl { bottom: 12px; left: 12px; border-right: none; border-top: none; }
+  .frame-corner.br { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+
+  .frame-label {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--moss);
+    z-index: 5;
+    background: var(--paper);
+    padding: 0 8px;
+  }
+
+  .network-svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+  }
+
+  .net-link {
+    stroke: var(--moss);
+    stroke-width: 0.6;
+    opacity: 0.35;
+    fill: none;
+  }
+  .net-link.warm { stroke: var(--copper); opacity: 0.5; }
+
+  .net-node {
+    fill: var(--ink);
+    transition: r 0.3s ease;
+  }
+  .net-node.warm { fill: var(--copper); }
+  .net-node.center { fill: var(--ink); }
+
+  /* Pulsing animation on selected nodes */
+  .pulse-ring {
+    fill: none;
+    stroke: var(--copper);
+    stroke-width: 1;
+    opacity: 0;
+    transform-origin: center;
+    transform-box: fill-box;
+    animation: pulse 4s ease-out infinite;
+  }
+  @keyframes pulse {
+    0%   { opacity: 0.7; r: 4; }
+    100% { opacity: 0; r: 28; }
+  }
+
+  /* Hero decorative line */
+  .hero-decoration {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--rule-soft);
+    z-index: 0;
+    transform: translateY(-50%);
+    display: none;
+  }
+
+  /* ============ SECTION DIVIDERS ============ */
+  .section-rule {
+    border-top: 1px solid var(--rule-soft);
+    margin: 0 auto;
+    max-width: calc(1280px - 96px);
+  }
+
+  /* ============ METAPHOR / INTRO SECTION ============ */
+  .metaphor {
+    padding: 120px 0;
+    background: var(--bg);
+  }
+  .metaphor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 120px;
+    align-items: start;
+  }
+  .metaphor-label {
+    position: sticky;
+    top: 120px;
+  }
+  .metaphor-number {
+    font-family: 'Fraunces', serif;
+    font-size: 80px;
+    font-style: italic;
+    color: var(--copper);
+    line-height: 0.9;
+    margin-bottom: 16px;
+    font-variation-settings: "SOFT" 80, "WONK" 1;
+  }
+  .metaphor-text {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(28px, 3vw, 38px);
+    line-height: 1.25;
+    color: var(--ink);
+    font-weight: 350;
+    letter-spacing: -0.015em;
+  }
+  .metaphor-text em {
+    font-style: italic;
+    color: var(--copper-deep);
+    font-variation-settings: "SOFT" 80, "WONK" 1;
+  }
+
+  /* ============ PROBLEM SECTION ============ */
+  .problem {
+    padding: 120px 0;
+    background: var(--bg-deep);
+    border-top: 1px solid var(--rule-soft);
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .problem-header {
+    max-width: 720px;
+    margin-bottom: 80px;
+  }
+  .problem-title {
+    font-size: clamp(40px, 5vw, 64px);
+    margin: 24px 0 20px;
+  }
+  .problem-intro {
+    font-size: 19px;
+    color: var(--ink-soft);
+    line-height: 1.55;
+    max-width: 600px;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .stat {
+    background: var(--bg-deep);
+    padding: 48px 36px;
+  }
+  .stat-num {
+    font-family: 'Fraunces', serif;
+    font-size: 88px;
+    font-weight: 300;
+    line-height: 1;
+    color: var(--ink);
+    margin-bottom: 16px;
+    letter-spacing: -0.03em;
+  }
+  .stat-num em {
+    font-style: italic;
+    color: var(--copper);
+    font-variation-settings: "SOFT" 80, "WONK" 1;
+  }
+  .stat-label {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+
+  /* ============ PILLARS / PRODUCT ============ */
+  .pillars {
+    padding: 120px 0;
+    background: var(--bg);
+  }
+  .section-header {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 80px;
+    margin-bottom: 80px;
+    align-items: end;
+  }
+  .section-title {
+    font-size: clamp(40px, 5vw, 68px);
+    max-width: 800px;
+  }
+  .section-title em {
+    font-style: italic;
+    color: var(--copper);
+    font-variation-settings: "SOFT" 80, "WONK" 1;
+  }
+
+  .pillar-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+  }
+  .pillar {
+    background: var(--bg);
+    padding: 48px 40px 56px;
+    position: relative;
+    transition: background 0.3s ease;
+  }
+  .pillar:hover { background: var(--paper); }
+
+  .pillar-num {
+    font-family: 'Fraunces', serif;
+    font-size: 14px;
+    color: var(--copper);
+    letter-spacing: 0.1em;
+    margin-bottom: 28px;
+    font-style: italic;
+    font-variation-settings: "SOFT" 80, "WONK" 1;
+  }
+  .pillar-icon {
+    width: 36px;
+    height: 36px;
+    margin-bottom: 24px;
+    color: var(--ink);
+  }
+  .pillar-name {
+    font-family: 'Fraunces', serif;
+    font-size: 34px;
+    font-weight: 400;
+    line-height: 1.05;
+    margin-bottom: 14px;
+    letter-spacing: -0.02em;
+  }
+  .pillar-desc {
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    max-width: 380px;
+  }
+
+  /* ============ MAP PREVIEW ============ */
+  .map-preview {
+    padding: 120px 0;
+    background: var(--ink);
+    color: var(--paper);
+    overflow: hidden;
+    position: relative;
+  }
+  .map-preview .mono-eyebrow { color: var(--copper-bright); }
+  .map-preview .section-title { color: var(--paper); }
+  .map-preview .section-title em { color: var(--copper-bright); }
+
+  .map-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .map-text {
+    max-width: 480px;
+  }
+  .map-text p {
+    color: rgba(251, 246, 234, 0.72);
+    font-size: 17px;
+    line-height: 1.65;
+    margin-bottom: 20px;
+  }
+  .map-text p:first-of-type { margin-top: 24px; }
+
+  .map-viewer {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    background: rgba(251, 246, 234, 0.03);
+    border: 1px solid rgba(212, 147, 79, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .map-viewer::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 25% 30%, rgba(184,117,62,0.25), transparent 40%),
+      radial-gradient(circle at 75% 70%, rgba(90,120,88,0.35), transparent 45%);
+    z-index: 0;
+  }
+  .map-svg { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; }
+  .map-svg .cluster-link {
+    stroke: var(--copper-bright);
+    stroke-width: 0.6;
+    opacity: 0.35;
+    fill: none;
+  }
+  .map-svg .cluster-link.bright {
+    stroke: var(--copper-bright);
+    opacity: 0.8;
+    stroke-width: 1;
+  }
+  .map-svg .cluster-node {
+    fill: var(--paper);
+  }
+  .map-svg .cluster-node.warm { fill: var(--copper-bright); }
+  .map-svg .cluster-label {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    fill: rgba(251, 246, 234, 0.6);
+  }
+  .map-svg .cluster-label.bright { fill: var(--copper-bright); }
+
+  .map-frame-meta {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: rgba(251, 246, 234, 0.4);
+    z-index: 5;
+  }
+  .map-frame-meta.right { left: auto; right: 18px; text-align: right; }
+
+  /* ============ QUERY / DIALOGUE EXAMPLE ============ */
+  .dialogue {
+    padding: 120px 0;
+    background: var(--bg);
+  }
+  .dialogue-frame {
+    max-width: 880px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 48px 56px 56px;
+    position: relative;
+    box-shadow: 0 30px 80px -40px rgba(14,42,32,0.15);
+  }
+  .dialogue-frame::before {
+    content: 'EXAMPLE QUERY';
+    position: absolute;
+    top: -10px;
+    left: 36px;
+    background: var(--bg);
+    padding: 0 12px;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--moss);
+  }
+  .q-line {
+    font-family: 'Fraunces', serif;
+    font-size: 30px;
+    line-height: 1.25;
+    color: var(--ink);
+    margin-bottom: 32px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .q-line::before {
+    content: 'Q. ';
+    color: var(--copper);
+    font-style: italic;
+    font-variation-settings: "SOFT" 80, "WONK" 1;
+  }
+  .a-line {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--ink-soft);
+    padding-left: 0;
+    border-top: 1px solid var(--rule-soft);
+    padding-top: 28px;
+  }
+  .a-line strong { color: var(--ink); font-weight: 600; }
+  .a-sources {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .source-tag {
+    font-size: 12px;
+    padding: 5px 12px;
+    background: var(--bg-deep);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    color: var(--moss);
+    letter-spacing: 0.02em;
+  }
+  .source-tag::before {
+    content: '↳ ';
+    color: var(--copper);
+  }
+
+  /* ============ WHY NOW ============ */
+  .why-now {
+    padding: 120px 0;
+    background: var(--bg-deep);
+    border-top: 1px solid var(--rule-soft);
+  }
+  .convergence {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .converge-item {
+    padding: 0 40px 0 0;
+    border-right: 1px solid var(--rule);
+  }
+  .converge-item:nth-child(2) { padding-left: 40px; }
+  .converge-item:last-child {
+    padding-left: 40px;
+    border-right: none;
+  }
+  .converge-year {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-size: 18px;
+    color: var(--copper);
+    margin-bottom: 12px;
+    font-variation-settings: "SOFT" 80, "WONK" 1;
+  }
+  .converge-name {
+    font-family: 'Fraunces', serif;
+    font-size: 30px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+  }
+  .converge-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+
+  /* ============ PRICING ============ */
+  .pricing {
+    padding: 120px 0;
+    background: var(--bg);
+  }
+  .price-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 64px;
+  }
+  .price-card {
+    background: var(--paper);
+    border: 1px solid var(--rule-soft);
+    padding: 40px 36px 44px;
+    border-radius: 4px;
+    position: relative;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .price-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px -25px rgba(14,42,32,0.18);
+  }
+  .price-card.featured {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .price-card.featured .price-name,
+  .price-card.featured .price-tier,
+  .price-card.featured .price-feature { color: var(--paper); }
+  .price-card.featured .price-amount em { color: var(--copper-bright); }
+  .price-card.featured .price-divider { background: rgba(251,246,234,0.15); }
+  .price-card.featured .badge {
+    background: var(--copper);
+    color: var(--paper);
+  }
+
+  .badge {
+    position: absolute;
+    top: -10px;
+    right: 24px;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: var(--copper-bright);
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .price-tier {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin-bottom: 14px;
+  }
+  .price-name {
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    font-weight: 400;
+    margin-bottom: 14px;
+    letter-spacing: -0.015em;
+  }
+  .price-amount {
+    font-family: 'Fraunces', serif;
+    font-size: 52px;
+    font-weight: 350;
+    line-height: 1;
+    margin-bottom: 6px;
+    letter-spacing: -0.025em;
+  }
+  .price-amount em {
+    font-style: italic;
+    color: var(--copper);
+    font-variation-settings: "SOFT" 80, "WONK" 1;
+  }
+  .price-amount .price-unit {
+    font-size: 14px;
+    font-family: 'Instrument Sans', sans-serif;
+    font-style: normal;
+    color: var(--ink-soft);
+    margin-left: 4px;
+  }
+  .price-card.featured .price-amount .price-unit { color: rgba(251,246,234,0.6); }
+  .price-blurb {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 28px;
+    min-height: 42px;
+  }
+  .price-card.featured .price-blurb { color: rgba(251,246,234,0.7); }
+
+  .price-divider {
+    height: 1px;
+    background: var(--rule-soft);
+    margin: 0 0 28px;
+  }
+
+  .price-features {
+    list-style: none;
+    margin-bottom: 32px;
+  }
+  .price-feature {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    padding: 9px 0;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .price-feature::before {
+    content: '';
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    margin-top: 4px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14'%3E%3Cpath d='M2 7L5.5 10.5L12 3.5' stroke='%23B8753E' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+  }
+
+  .price-cta {
+    display: block;
+    text-align: center;
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+  }
+  .price-cta:hover { background: var(--ink); color: var(--paper); }
+  .price-card.featured .price-cta {
+    background: var(--copper);
+    color: var(--paper);
+    border-color: var(--copper);
+  }
+  .price-card.featured .price-cta:hover {
+    background: var(--copper-deep);
+    border-color: var(--copper-deep);
+  }
+
+  /* ============ CTA FOOTER ============ */
+  .cta {
+    padding: 140px 0 160px;
+    background: var(--bg);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(184,117,62,0.06), transparent 60%);
+    z-index: 0;
+  }
+  .cta-inner { position: relative; z-index: 2; max-width: 720px; margin: 0 auto; }
+  .cta-title {
+    font-size: clamp(48px, 7vw, 96px);
+    margin-bottom: 24px;
+    line-height: 1;
+  }
+  .cta-title em {
+    font-style: italic;
+    color: var(--copper);
+    font-variation-settings: "SOFT" 80, "WONK" 1;
+  }
+  .cta-text {
+    font-size: 19px;
+    color: var(--ink-soft);
+    margin-bottom: 48px;
+    max-width: 560px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .form-row {
+    display: flex;
+    gap: 12px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  .form-row input {
+    flex: 1;
+    padding: 14px 22px;
+    border-radius: 999px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .form-row input:focus {
+    border-color: var(--copper);
+    box-shadow: 0 0 0 3px rgba(184,117,62,0.15);
+  }
+  .form-row input::placeholder { color: rgba(14,42,32,0.4); }
+
+  /* ============ FOOTER ============ */
+  footer {
+    background: var(--ink);
+    color: rgba(251,246,234,0.6);
+    padding: 72px 0 36px;
+    position: relative;
+    z-index: 2;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 48px;
+    margin-bottom: 64px;
+  }
+  .footer-brand .logo { color: var(--paper); margin-bottom: 16px; }
+  .footer-brand p {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(251,246,234,0.6);
+    max-width: 320px;
+  }
+  .footer-col h4 {
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--copper-bright);
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 12px; }
+  .footer-col a {
+    color: rgba(251,246,234,0.7);
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.2s ease;
+  }
+  .footer-col a:hover { color: var(--copper-bright); }
+
+  .footer-bottom {
+    border-top: 1px solid rgba(251,246,234,0.1);
+    padding-top: 28px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: rgba(251,246,234,0.4);
+  }
+
+  /* ============ RESPONSIVE ============ */
+  @media (max-width: 900px) {
+    .container { padding: 0 24px; }
+    nav { padding: 18px 24px; }
+    .nav-links { display: none; }
+    .nav-links.mobile-visible { display: flex; gap: 20px; font-size: 13px; }
+    .hero-grid, .metaphor-grid, .map-grid {
+      grid-template-columns: 1fr;
+      gap: 48px;
+    }
+    .stats, .pillar-grid, .convergence, .price-grid {
+      grid-template-columns: 1fr;
+    }
+    .converge-item {
+      padding: 32px 0;
+      border-right: none;
+      border-bottom: 1px solid var(--rule);
+    }
+    .converge-item:nth-child(2),
+    .converge-item:last-child { padding-left: 0; }
+    .converge-item:last-child { border-bottom: none; }
+    .section-header {
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+    .form-row { flex-direction: column; }
+    .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .footer-brand { grid-column: 1 / -1; }
+    .dialogue-frame { padding: 36px 28px; }
+    .q-line { font-size: 22px; }
+  }
+
+  /* ============ MICRO-ANIMATIONS ============ */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up {
+    animation: fadeUp 0.8s ease forwards;
+  }
+
+  .hero-eyebrow { animation: fadeUp 0.6s ease 0.1s both; }
+  .hero-headline { animation: fadeUp 0.8s ease 0.2s both; }
+  .hero-sub      { animation: fadeUp 0.8s ease 0.4s both; }
+  .hero-ctas     { animation: fadeUp 0.8s ease 0.6s both; }
+  .network-frame { animation: fadeUp 1s ease 0.5s both; }
+
+  /* Soft glow on hover for pillars */
+  .pillar::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--copper);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .pillar:hover::after { width: 100%; }
+</style>
+</head>
+<body>
+
+<!-- ============ NAV ============ -->
+<nav id="nav">
+  <div class="logo">
+    <svg class="logo-mark" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="2" fill="currentColor"/>
+      <circle cx="4"  cy="6"  r="1.4" fill="currentColor"/>
+      <circle cx="20" cy="7"  r="1.4" fill="currentColor"/>
+      <circle cx="5"  cy="19" r="1.4" fill="currentColor"/>
+      <circle cx="19" cy="18" r="1.4" fill="currentColor"/>
+      <circle cx="12" cy="3"  r="1.2" fill="currentColor"/>
+      <circle cx="12" cy="21" r="1.2" fill="currentColor"/>
+      <line x1="12" y1="12" x2="4"  y2="6"  stroke="currentColor" stroke-width="0.7"/>
+      <line x1="12" y1="12" x2="20" y2="7"  stroke="currentColor" stroke-width="0.7"/>
+      <line x1="12" y1="12" x2="5"  y2="19" stroke="currentColor" stroke-width="0.7"/>
+      <line x1="12" y1="12" x2="19" y2="18" stroke="currentColor" stroke-width="0.7"/>
+      <line x1="12" y1="12" x2="12" y2="3"  stroke="currentColor" stroke-width="0.7"/>
+      <line x1="12" y1="12" x2="12" y2="21" stroke="currentColor" stroke-width="0.7"/>
+    </svg>
+    Mycelium
+  </div>
+  <div class="nav-links">
+    <a href="#product">Product</a>
+    <a href="#why-now">Why now</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#access" class="btn btn-ghost">Request access</a>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="container">
+    <div class="hero-grid">
+      <div class="hero-text">
+        <div class="hero-eyebrow">
+          <span class="mono-eyebrow">Private beta — Q3 2026</span>
+        </div>
+        <h1 class="hero-headline display">
+          Your company<br>already <em>knows.</em>
+        </h1>
+        <p class="hero-sub">
+          Every organization is held together by knowledge that lives nowhere written down — in Slack threads, lost meetings, the heads of three senior engineers. Mycelium reads it all, maps how your company actually works, and makes it ask-able.
+        </p>
+        <div class="hero-ctas">
+          <a href="#access" class="btn btn-primary">
+            Request early access
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 7H11M11 7L7 3M11 7L7 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+          <a href="#product" class="btn btn-text">
+            How it works
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M3 7H11M11 7L7 3M11 7L7 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div class="network-frame">
+        <span class="frame-corner tl"></span>
+        <span class="frame-corner tr"></span>
+        <span class="frame-corner bl"></span>
+        <span class="frame-corner br"></span>
+        <span class="frame-label">Living network · 18,431 nodes</span>
+        <svg class="network-svg" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">
+          <!-- Connections -->
+          <g>
+            <path class="net-link" d="M 200 200 Q 130 130 80 90" />
+            <path class="net-link" d="M 200 200 Q 270 130 320 80" />
+            <path class="net-link" d="M 200 200 Q 280 280 340 320" />
+            <path class="net-link" d="M 200 200 Q 130 280 70 320" />
+            <path class="net-link warm" d="M 200 200 L 200 80" />
+            <path class="net-link warm" d="M 200 200 L 200 320" />
+            <path class="net-link" d="M 200 200 L 90 200" />
+            <path class="net-link" d="M 200 200 L 310 200" />
+            <path class="net-link" d="M 80 90 Q 50 160 70 200" />
+            <path class="net-link" d="M 320 80 Q 350 160 310 200" />
+            <path class="net-link" d="M 70 320 Q 50 250 90 200" />
+            <path class="net-link" d="M 340 320 Q 350 250 310 200" />
+            <path class="net-link" d="M 200 80 L 80 90" />
+            <path class="net-link" d="M 200 80 L 320 80" />
+            <path class="net-link" d="M 200 320 L 70 320" />
+            <path class="net-link" d="M 200 320 L 340 320" />
+            <path class="net-link" d="M 80 90 Q 140 70 200 80" />
+            <path class="net-link" d="M 320 80 Q 260 70 200 80" />
+            <path class="net-link warm" d="M 200 200 Q 150 170 120 140" />
+            <path class="net-link warm" d="M 200 200 Q 250 170 290 150" />
+            <path class="net-link" d="M 120 140 L 90 200" />
+            <path class="net-link" d="M 290 150 L 310 200" />
+            <path class="net-link" d="M 200 200 Q 170 240 140 270" />
+            <path class="net-link" d="M 200 200 Q 230 240 260 260" />
+          </g>
+
+          <!-- Pulse rings (ambient activity) -->
+          <circle class="pulse-ring" cx="200" cy="200" r="4" style="animation-delay: 0s;" />
+          <circle class="pulse-ring" cx="80"  cy="90"  r="4" style="animation-delay: 1.3s;" />
+          <circle class="pulse-ring" cx="320" cy="80"  r="4" style="animation-delay: 2.6s;" />
+          <circle class="pulse-ring" cx="200" cy="320" r="4" style="animation-delay: 0.7s;" />
+
+          <!-- Nodes -->
+          <circle class="net-node center" cx="200" cy="200" r="5.5" />
+          <circle class="net-node warm"   cx="200" cy="80"  r="4" />
+          <circle class="net-node warm"   cx="200" cy="320" r="3.5" />
+          <circle class="net-node"        cx="80"  cy="90"  r="3.5" />
+          <circle class="net-node"        cx="320" cy="80"  r="3.5" />
+          <circle class="net-node"        cx="70"  cy="320" r="3" />
+          <circle class="net-node"        cx="340" cy="320" r="3.5" />
+          <circle class="net-node"        cx="90"  cy="200" r="3" />
+          <circle class="net-node"        cx="310" cy="200" r="3" />
+          <circle class="net-node warm"   cx="120" cy="140" r="2.5" />
+          <circle class="net-node warm"   cx="290" cy="150" r="2.5" />
+          <circle class="net-node"        cx="140" cy="270" r="2.5" />
+          <circle class="net-node"        cx="260" cy="260" r="2.5" />
+          <circle class="net-node"        cx="50"  cy="160" r="2" />
+          <circle class="net-node"        cx="350" cy="160" r="2" />
+          <circle class="net-node"        cx="50"  cy="250" r="2" />
+          <circle class="net-node"        cx="350" cy="250" r="2" />
+          <circle class="net-node"        cx="140" cy="60"  r="2" />
+          <circle class="net-node"        cx="260" cy="60"  r="2" />
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ METAPHOR ============ -->
+<section class="metaphor">
+  <div class="container">
+    <div class="metaphor-grid">
+      <div class="metaphor-label">
+        <div class="metaphor-number">01</div>
+        <span class="mono-eyebrow">The metaphor</span>
+      </div>
+      <div class="metaphor-text">
+        Beneath every forest runs a network of fungal threads — <em>mycelium</em> — that connects the trees, carries nutrients between them, and signals when one is in distress. The forest looks like individuals. It behaves like one organism.<br><br>
+        Your company is the same. <em>The intelligence is already there.</em> It's just buried, fragmented, and dying every time someone leaves. We built Mycelium to surface it.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PROBLEM ============ -->
+<section class="problem">
+  <div class="container">
+    <div class="problem-header">
+      <span class="mono-eyebrow">The problem</span>
+      <h2 class="problem-title display">
+        At 50 people, the<br>company forgets itself.
+      </h2>
+      <p class="problem-intro">
+        By the time you hit fifty employees, your company runs on knowledge spread across forty different tools and dozens of heads. Wikis go stale in weeks. Onboarding is a ritual of asking the same four people the same five questions. And when someone leaves, something important leaves with them — and nobody knows what.
+      </p>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num"><em>3-6</em></div>
+        <div class="stat-label">Months for a new knowledge worker to reach full productivity.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">$<em>20k</em></div>
+        <div class="stat-label">Average loaded cost to bring a single new hire up to speed.</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num"><em>1.8</em>h</div>
+        <div class="stat-label">Spent per employee per day searching for or recreating information.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PILLARS ============ -->
+<section class="pillars" id="product">
+  <div class="container">
+    <div class="section-header">
+      <span class="mono-eyebrow">The product</span>
+      <h2 class="section-title display">
+        Four things no<br>other tool does <em>together.</em>
+      </h2>
+    </div>
+    <div class="pillar-grid">
+      <div class="pillar">
+        <div class="pillar-num">i.</div>
+        <svg class="pillar-icon" viewBox="0 0 36 36" fill="none">
+          <circle cx="18" cy="18" r="3" stroke="currentColor" stroke-width="1.5"/>
+          <circle cx="18" cy="18" r="8" stroke="currentColor" stroke-width="1" opacity="0.6"/>
+          <circle cx="18" cy="18" r="13" stroke="currentColor" stroke-width="1" opacity="0.3"/>
+          <circle cx="6" cy="18" r="1.5" fill="currentColor"/>
+          <circle cx="30" cy="18" r="1.5" fill="currentColor"/>
+          <circle cx="18" cy="6" r="1.5" fill="currentColor"/>
+          <circle cx="18" cy="30" r="1.5" fill="currentColor"/>
+        </svg>
+        <h3 class="pillar-name">Observe<br><span class="serif-italic">everything.</span></h3>
+        <p class="pillar-desc">
+          Mycelium connects to Slack, Notion, Google Workspace, Linear, GitHub, Salesforce, your meeting transcripts and email. It reads what's actually happening, not what someone remembered to document.
+        </p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">ii.</div>
+        <svg class="pillar-icon" viewBox="0 0 36 36" fill="none">
+          <path d="M6 8L12 14L20 10L28 16L30 28" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M6 22L14 18L20 24L28 22" stroke="currentColor" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.6"/>
+          <circle cx="6" cy="8" r="1.5" fill="currentColor"/>
+          <circle cx="12" cy="14" r="1.5" fill="currentColor"/>
+          <circle cx="20" cy="10" r="1.5" fill="currentColor"/>
+          <circle cx="28" cy="16" r="1.5" fill="currentColor"/>
+          <circle cx="30" cy="28" r="1.5" fill="currentColor"/>
+        </svg>
+        <h3 class="pillar-name">Map how things <span class="serif-italic">really</span> work.</h3>
+        <p class="pillar-desc">
+          From observed behavior, Mycelium builds a living model of your organization: real workflows, real decision patterns, real expertise networks — not the version on the org chart.
+        </p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">iii.</div>
+        <svg class="pillar-icon" viewBox="0 0 36 36" fill="none">
+          <rect x="8" y="6" width="20" height="24" rx="1" stroke="currentColor" stroke-width="1.5" fill="none"/>
+          <line x1="12" y1="12" x2="24" y2="12" stroke="currentColor" stroke-width="1"/>
+          <line x1="12" y1="16" x2="22" y2="16" stroke="currentColor" stroke-width="1"/>
+          <line x1="12" y1="20" x2="24" y2="20" stroke="currentColor" stroke-width="1"/>
+          <line x1="12" y1="24" x2="18" y2="24" stroke="currentColor" stroke-width="1"/>
+        </svg>
+        <h3 class="pillar-name">Write its <span class="serif-italic">own</span> documentation.</h3>
+        <p class="pillar-desc">
+          No more wiki rot. Mycelium drafts and continuously updates documentation from what it observes — onboarding guides, runbooks, process docs, all alive and dated to the day they were last verified.
+        </p>
+      </div>
+      <div class="pillar">
+        <div class="pillar-num">iv.</div>
+        <svg class="pillar-icon" viewBox="0 0 36 36" fill="none">
+          <path d="M6 14C6 9.58 9.58 6 14 6H22C26.42 6 30 9.58 30 14V18C30 22.42 26.42 26 22 26H16L10 30V25.5C7.6 24.1 6 21.5 6 18V14Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+          <circle cx="14" cy="16" r="1.2" fill="currentColor"/>
+          <circle cx="18" cy="16" r="1.2" fill="currentColor"/>
+          <circle cx="22" cy="16" r="1.2" fill="currentColor"/>
+        </svg>
+        <h3 class="pillar-name">Answer <span class="serif-italic">anything.</span></h3>
+        <p class="pillar-desc">
+          Any employee can ask <em>"who actually owns our Stripe integration?"</em> or <em>"how did the refund policy evolve?"</em> and get a current answer with sources — pulled straight from the conversations and documents where the knowledge lives.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MAP PREVIEW ============ -->
+<section class="map-preview">
+  <div class="container">
+    <div class="map-grid">
+      <div class="map-text">
+        <span class="mono-eyebrow">The map</span>
+        <h2 class="section-title display" style="margin-top: 20px;">
+          See your company<br>as one <em>organism.</em>
+        </h2>
+        <p>
+          The Map is Mycelium's centerpiece — an interactive visualization of how work actually flows through your organization. Teams, projects, decisions, and the people who hold them together.
+        </p>
+        <p>
+          Zoom in on any node to see what's been written, decided, and discussed. Spot single points of failure before they become resignation letters. Watch new initiatives form, mature, and connect to the rest of the company in real time.
+        </p>
+      </div>
+      <div class="map-viewer">
+        <div class="map-frame-meta">LIVE · 14:23 GMT</div>
+        <div class="map-frame-meta right">7 ACTIVE PROCESSES</div>
+        <svg class="map-svg" viewBox="0 0 600 450" preserveAspectRatio="xMidYMid meet">
+          <!-- Cluster: Product -->
+          <g>
+            <text class="cluster-label bright" x="120" y="80">PRODUCT</text>
+            <path class="cluster-link bright" d="M 130 110 L 180 130 L 130 160 L 160 200 L 110 180 Z" fill="none"/>
+            <circle class="cluster-node warm" cx="130" cy="110" r="4"/>
+            <circle class="cluster-node warm" cx="180" cy="130" r="3"/>
+            <circle class="cluster-node warm" cx="130" cy="160" r="3.5"/>
+            <circle class="cluster-node warm" cx="160" cy="200" r="3"/>
+            <circle class="cluster-node warm" cx="110" cy="180" r="3"/>
+          </g>
+
+          <!-- Cluster: Engineering -->
+          <g>
+            <text class="cluster-label" x="370" y="80">ENGINEERING</text>
+            <path class="cluster-link" d="M 380 110 L 430 100 L 470 140 L 440 180 L 390 160 Z" fill="none"/>
+            <circle class="cluster-node" cx="380" cy="110" r="3.5"/>
+            <circle class="cluster-node" cx="430" cy="100" r="3"/>
+            <circle class="cluster-node" cx="470" cy="140" r="4"/>
+            <circle class="cluster-node" cx="440" cy="180" r="3"/>
+            <circle class="cluster-node" cx="390" cy="160" r="3"/>
+          </g>
+
+          <!-- Cluster: Sales -->
+          <g>
+            <text class="cluster-label" x="80" y="320">SALES</text>
+            <path class="cluster-link" d="M 90 350 L 140 340 L 170 380 L 120 400 L 80 380 Z" fill="none"/>
+            <circle class="cluster-node" cx="90" cy="350" r="3"/>
+            <circle class="cluster-node" cx="140" cy="340" r="3.5"/>
+            <circle class="cluster-node" cx="170" cy="380" r="3"/>
+            <circle class="cluster-node" cx="120" cy="400" r="3"/>
+            <circle class="cluster-node" cx="80" cy="380" r="3"/>
+          </g>
+
+          <!-- Cluster: Customer Success -->
+          <g>
+            <text class="cluster-label" x="380" y="320">SUCCESS</text>
+            <path class="cluster-link" d="M 400 350 L 450 340 L 480 380 L 430 400 L 380 380 Z" fill="none"/>
+            <circle class="cluster-node" cx="400" cy="350" r="3"/>
+            <circle class="cluster-node" cx="450" cy="340" r="3.5"/>
+            <circle class="cluster-node" cx="480" cy="380" r="3"/>
+            <circle class="cluster-node" cx="430" cy="400" r="3"/>
+            <circle class="cluster-node" cx="380" cy="380" r="3"/>
+          </g>
+
+          <!-- Inter-cluster links (the actual organism) -->
+          <path class="cluster-link bright" d="M 160 200 Q 250 230 380 110" />
+          <path class="cluster-link bright" d="M 180 130 Q 280 130 380 110" />
+          <path class="cluster-link" d="M 130 160 Q 140 250 90 350" />
+          <path class="cluster-link" d="M 470 140 Q 480 250 480 380" />
+          <path class="cluster-link" d="M 170 380 Q 280 380 400 350" />
+          <path class="cluster-link" d="M 160 200 Q 280 280 400 350" />
+          <path class="cluster-link bright" d="M 440 180 Q 380 260 170 380" />
+
+          <!-- Central hub -->
+          <circle class="cluster-node warm" cx="290" cy="225" r="6" />
+          <text class="cluster-label bright" x="305" y="228">CORE</text>
+          <path class="cluster-link bright" d="M 290 225 L 130 110" />
+          <path class="cluster-link bright" d="M 290 225 L 380 110" />
+          <path class="cluster-link bright" d="M 290 225 L 140 340" />
+          <path class="cluster-link bright" d="M 290 225 L 450 340" />
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DIALOGUE EXAMPLE ============ -->
+<section class="dialogue">
+  <div class="container">
+    <div class="dialogue-frame">
+      <p class="q-line">
+        Why did we move from monthly to quarterly billing for enterprise accounts last summer?
+      </p>
+      <div class="a-line">
+        The change was decided in <strong>July 2025</strong> after three consecutive quarters of churn data showed enterprise customers preferred consolidated invoicing for procurement reasons. <strong>Marcus Chen</strong> proposed it in a Slack thread on June 14, the finance team modeled the cash-flow impact, and <strong>Priya</strong> approved it in the August leadership offsite. Effective for contracts signed after September 1, 2025.
+        <div class="a-sources">
+          <span class="source-tag">slack/#enterprise-strategy</span>
+          <span class="source-tag">notion/Q3 Pricing Review</span>
+          <span class="source-tag">gdrive/Offsite Decisions Aug 2025</span>
+          <span class="source-tag">+ 4 more sources</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHY NOW ============ -->
+<section class="why-now" id="why-now">
+  <div class="container">
+    <div class="section-header">
+      <span class="mono-eyebrow">Why now</span>
+      <h2 class="section-title display">
+        Three forces just<br>made this <em>inevitable.</em>
+      </h2>
+    </div>
+    <div class="convergence">
+      <div class="converge-item">
+        <div class="converge-year">i. 2024 –</div>
+        <h3 class="converge-name">Long-context AI</h3>
+        <p class="converge-text">
+          Million-token context windows make it possible for the first time to reason across an entire company's accumulated communications — not just retrieve from them.
+        </p>
+      </div>
+      <div class="converge-item">
+        <div class="converge-year">ii. 2020 –</div>
+        <h3 class="converge-name">The remote shift</h3>
+        <p class="converge-text">
+          Hybrid work permanently fragmented the hallway conversations and shoulder-tapping that used to hold organizations together. The institutional knowledge crisis is now structural.
+        </p>
+      </div>
+      <div class="converge-item">
+        <div class="converge-year">iii. ongoing</div>
+        <h3 class="converge-name">SaaS sprawl</h3>
+        <p class="converge-text">
+          The average mid-size company runs more than 80 SaaS tools — up from ~20 a decade ago. Knowledge has never been more fragmented, or more in need of a unifying layer.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRICING ============ -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <span class="mono-eyebrow">Pricing</span>
+      <h2 class="section-title display">
+        Built to grow<br>with the <em>organism.</em>
+      </h2>
+    </div>
+    <div class="price-grid">
+
+      <div class="price-card">
+        <div class="price-tier">Starter</div>
+        <h3 class="price-name">For new teams<br>finding their feet.</h3>
+        <div class="price-amount"><em>$25</em><span class="price-unit">/seat/mo</span></div>
+        <p class="price-blurb">Up to 50 employees. Self-serve. The whole brain, with a smaller body.</p>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li class="price-feature">5 integrations (Slack, GDrive, Notion, Linear, GitHub)</li>
+          <li class="price-feature">Ask Mycelium — unlimited queries</li>
+          <li class="price-feature">Auto-documentation</li>
+          <li class="price-feature">Knowledge debt dashboard</li>
+        </ul>
+        <a href="#access" class="price-cta">Start free trial</a>
+      </div>
+
+      <div class="price-card featured">
+        <span class="badge">Most chosen</span>
+        <div class="price-tier">Growth</div>
+        <h3 class="price-name">For companies hitting<br>knowledge gravity.</h3>
+        <div class="price-amount"><em>$40</em><span class="price-unit">/seat/mo</span></div>
+        <p class="price-blurb">50 to 500 employees. Light-touch sales. The full living map.</p>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li class="price-feature">All 50+ integrations</li>
+          <li class="price-feature">The Map — full visualization layer</li>
+          <li class="price-feature">Onboarding Agent for new hires</li>
+          <li class="price-feature">People Graph (expertise discovery)</li>
+          <li class="price-feature">SSO/SAML, audit logs</li>
+        </ul>
+        <a href="#access" class="price-cta">Book a walkthrough</a>
+      </div>
+
+      <div class="price-card">
+        <div class="price-tier">Enterprise</div>
+        <h3 class="price-name">For organisms<br>of significant scale.</h3>
+        <div class="price-amount"><em>Custom</em></div>
+        <p class="price-blurb">500+ employees. Dedicated team. The brain, in your own VPC if you'd like.</p>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li class="price-feature">Everything in Growth</li>
+          <li class="price-feature">BYOK encryption, on-prem option</li>
+          <li class="price-feature">Custom connectors</li>
+          <li class="price-feature">SOC 2, ISO 27001, HIPAA</li>
+          <li class="price-feature">Dedicated solutions architect</li>
+        </ul>
+        <a href="#access" class="price-cta">Talk to us</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="cta" id="access">
+  <div class="container">
+    <div class="cta-inner">
+      <span class="mono-eyebrow">Private beta · By invitation</span>
+      <h2 class="cta-title display" style="margin-top: 20px;">
+        Help us grow the<br><em>first</em> mycelium.
+      </h2>
+      <p class="cta-text">
+        We're working with a small group of design partners between 50 and 300 employees. If your company is drowning in its own knowledge, we'd like to hear from you.
+      </p>
+      <form class="form-row" onsubmit="event.preventDefault(); alert('Thanks — we\\'ll be in touch.');">
+        <input type="email" placeholder="you@yourcompany.com" required>
+        <button type="submit" class="btn btn-primary">
+          Request access
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 7H11M11 7L7 3M11 7L7 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">
+          <svg class="logo-mark" viewBox="0 0 24 24" fill="none" style="color: #FBF6EA;">
+            <circle cx="12" cy="12" r="2" fill="currentColor"/>
+            <circle cx="4"  cy="6"  r="1.4" fill="currentColor"/>
+            <circle cx="20" cy="7"  r="1.4" fill="currentColor"/>
+            <circle cx="5"  cy="19" r="1.4" fill="currentColor"/>
+            <circle cx="19" cy="18" r="1.4" fill="currentColor"/>
+            <circle cx="12" cy="3"  r="1.2" fill="currentColor"/>
+            <circle cx="12" cy="21" r="1.2" fill="currentColor"/>
+            <line x1="12" y1="12" x2="4"  y2="6"  stroke="currentColor" stroke-width="0.7"/>
+            <line x1="12" y1="12" x2="20" y2="7"  stroke="currentColor" stroke-width="0.7"/>
+            <line x1="12" y1="12" x2="5"  y2="19" stroke="currentColor" stroke-width="0.7"/>
+            <line x1="12" y1="12" x2="19" y2="18" stroke="currentColor" stroke-width="0.7"/>
+            <line x1="12" y1="12" x2="12" y2="3"  stroke="currentColor" stroke-width="0.7"/>
+            <line x1="12" y1="12" x2="12" y2="21" stroke="currentColor" stroke-width="0.7"/>
+          </svg>
+          Mycelium
+        </div>
+        <p>The institutional memory your company already had. Now alive, mapped, and ask-able.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#product">Pillars</a></li>
+          <li><a href="#">The Map</a></li>
+          <li><a href="#">Onboarding Agent</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">Manifesto</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+          <li><a href="#">Security</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Connect</h4>
+        <ul>
+          <li><a href="#">hello@mycelium.co</a></li>
+          <li><a href="#">Twitter</a></li>
+          <li><a href="#">LinkedIn</a></li>
+          <li><a href="#">Substack</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div>© 2026 Mycelium Labs, Inc.</div>
+      <div>Made with care · Brooklyn & Lagos</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Tiny nav scroll effect
+  const nav = document.getElementById('nav');
+  const onScroll = () => {
+    if (window.scrollY > 30) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  };
+  window.addEventListener('scroll', onScroll, { passive: true });
+</script>
+
+</body>
+</html>
